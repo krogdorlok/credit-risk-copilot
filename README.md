@@ -4,7 +4,7 @@ An agent that answers questions across three data sources: Freddie Mac loan-leve
 performance data, FRED macro series, and SEC 10-K filings. It routes each question
 to SQL, RAG, or both, and answers with citations.
 
-Status: early build (M1 in progress). See `CLAUDE.md` for the full milestone plan.
+Status: early build (M1 done). See `CLAUDE.md` for the full milestone plan.
 
 ## Setup
 
@@ -46,4 +46,14 @@ uv run fastapi dev src/agentic_analytics_copilot/main.py
 
 ```bash
 uv run pytest
+```
+
+## Loading loan data
+
+Requires a Freddie Mac account. Download the Single-Family Loan-Level Dataset
+sample (Clarity Data Intelligence, SFLLD section) for whichever years you
+want, drop the `sample_YYYY.zip` files in `data/`, then run:
+
+```bash
+uv run python3 scripts/ingest_sample_loans.py
 ```

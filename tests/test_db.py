@@ -5,8 +5,8 @@ from agentic_analytics_copilot.db import get_engine
 
 
 def test_engine_connects_to_postgres() -> None:
-    engine = get_engine()
     try:
+        engine = get_engine()
         with engine.connect() as conn:
             result = conn.execute(text("SELECT 1"))
             assert result.scalar() == 1

@@ -17,8 +17,8 @@ FIXTURES = Path(__file__).parent / "fixtures"
 
 @pytest.fixture
 def engine():  # type: ignore[no-untyped-def]
-    engine = get_engine()
     try:
+        engine = get_engine()
         with engine.connect():
             pass
     except Exception:

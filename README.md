@@ -34,6 +34,9 @@ uv sync
 uv run pre-commit install
 ```
 
+Get a free FRED API key at https://fred.stlouisfed.org/docs/api/api_key.html
+and set `FRED_API_KEY` in `.env`.
+
 ## Run
 
 ```bash

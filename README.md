@@ -58,3 +58,12 @@ want, drop the `sample_YYYY.zip` files in `data/`, then run:
 ```bash
 uv run python3 scripts/ingest_sample_loans.py
 ```
+
+## Load test
+
+Runs 100 concurrent users (a mix of heavy, medium, and point-lookup queries) against the loaded
+database and prints p50/p95 latency per query type:
+
+```bash
+uv run python3 scripts/load_test.py
+```

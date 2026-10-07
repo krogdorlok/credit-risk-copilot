@@ -6,3 +6,4 @@ class Settings(BaseSettings):
 
     database_url: str
     fred_api_key: str
+    sec_user_agent: str

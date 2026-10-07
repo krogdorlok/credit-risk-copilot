@@ -1,10 +1,11 @@
 """Typed client for the FRED (Federal Reserve Economic Data) API.
 
-Caches successful responses to disk. On a live-API failure (network error,
-repeated 429s, or a 5xx) falls back to the most recent cached response, even
-if past TTL, since stale macro data beats none. Cache TTL is 24 hours: the
-series this project pulls (mortgage rates, unemployment, CPI) update at most
-daily, so anything fresher than a day is never actually stale.
+Retries follow agentic_analytics_copilot.retry. Caches successful responses to
+disk. On a live-API failure (network error, repeated 429s, or a 5xx) falls back
+to the most recent cached response, even if past TTL, since stale macro data
+beats none. Cache TTL is 24 hours: the series this project pulls (mortgage
+rates, Treasury yields, home prices, housing starts) update at most daily, so
+anything fresher than a day is never actually stale.
 """
 
 import json
@@ -17,11 +18,10 @@ from typing import Any
 import httpx
 
 from agentic_analytics_copilot.fred.schema import SeriesObservations
+from agentic_analytics_copilot.retry import get_with_retry
 
 BASE_URL = "https://api.stlouisfed.org/fred/series/observations"
 CACHE_TTL = timedelta(hours=24)
-MAX_ATTEMPTS = 3
-RETRYABLE_STATUS_CODES = {429, 500, 502, 503, 504}
 
 
 class FredApiError(Exception):
@@ -63,30 +63,9 @@ class FredClient:
 
     def _fetch(self, series_id: str) -> list[dict[str, Any]]:  # Any: raw FRED JSON observation
         params = {"series_id": series_id, "api_key": self._api_key, "file_type": "json"}
-        backoff = 1.0
-        last_error: Exception | None = None
-
-        for attempt in range(MAX_ATTEMPTS):
-            try:
-                response = self._http.get(BASE_URL, params=params)
-            except httpx.TransportError as exc:
-                last_error = exc
-            else:
-                if response.status_code == 200:
-                    result: list[dict[str, Any]] = response.json()["observations"]
-                    return result
-                if response.status_code not in RETRYABLE_STATUS_CODES:
-                    raise FredApiError(f"FRED API error {response.status_code}: {response.text}")
-                last_error = FredApiError(f"FRED API error {response.status_code}")
-                retry_after = response.headers.get("Retry-After")
-                if retry_after is not None:
-                    backoff = float(retry_after)
-
-            if attempt < MAX_ATTEMPTS - 1:
-                self._sleep(backoff)
-                backoff *= 2
-
-        raise FredApiError(f"FRED API request failed after {MAX_ATTEMPTS} attempts") from last_error
+        response = get_with_retry(self._http, BASE_URL, FredApiError, self._sleep, params)
+        result: list[dict[str, Any]] = response.json()["observations"]
+        return result
 
     def _cache_path(self, series_id: str) -> Path:
         return self._cache_dir / f"{series_id}.json"

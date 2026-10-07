@@ -24,6 +24,7 @@ jobs:
     env:
       TEST_DATABASE_URL: postgresql+psycopg://copilot:copilot@localhost:5432/copilot_test
       FRED_API_KEY: ci-dummy-key
+      SEC_USER_AGENT: CI test@example.com
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5

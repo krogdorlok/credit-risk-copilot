@@ -37,7 +37,8 @@ uv run pre-commit install
 ```
 
 Get a free FRED API key at https://fred.stlouisfed.org/docs/api/api_key.html
-and set `FRED_API_KEY` in `.env`.
+and set `FRED_API_KEY` in `.env`. Set `SEC_USER_AGENT` to a name and contact email; SEC
+rejects EDGAR requests without one.
 
 ## Run
 
@@ -62,6 +63,18 @@ want, drop the `sample_YYYY.zip` files in `data/`, then run:
 
 ```bash
 uv run python3 scripts/ingest_sample_loans.py
+```
+
+## Loading 10-K filings
+
+Fetches every 10-K since FY2016 (COOP and PFSI from FY2018, UWMC from FY2021, RKT from its 2020
+IPO) for FMCC, FNMA, RKT, UWMC, COOP, PFSI, JPM, and WFC and saves
+Items 1, 1A, 7, and 7A as `data/sec/{ticker}/{fiscal_year}.json`. Filings already on disk are
+skipped, so reruns only fetch new ones. A section the filer folds elsewhere (GSEs and large banks
+put Item 7A inside MD&A) is saved as `null`.
+
+```bash
+uv run python3 scripts/ingest_sec_filings.py
 ```
 
 ## Load test

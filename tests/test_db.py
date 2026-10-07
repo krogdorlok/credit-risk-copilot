@@ -1,14 +1,6 @@
-import pytest
-from sqlalchemy import text
-
-from agentic_analytics_copilot.db import get_engine
+from sqlalchemy import Engine, text
 
 
-def test_engine_connects_to_postgres() -> None:
-    try:
-        engine = get_engine()
-        with engine.connect() as conn:
-            result = conn.execute(text("SELECT 1"))
-            assert result.scalar() == 1
-    except Exception:
-        pytest.skip("Postgres not reachable")
+def test_engine_connects_to_test_database(engine: Engine) -> None:
+    with engine.connect() as conn:
+        assert conn.execute(text("SELECT current_database()")).scalar() == "copilot_test"

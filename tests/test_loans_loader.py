@@ -1,40 +1,18 @@
 from pathlib import Path
 
-import pytest
-from sqlalchemy import delete, select
+from sqlalchemy import Engine, select
 
-from agentic_analytics_copilot.db import get_engine
 from agentic_analytics_copilot.loans.loader import (
-    create_tables,
     load_originations,
     load_performance,
 )
-from agentic_analytics_copilot.loans.models import LoanOriginationRow, LoanPerformanceRow
+from agentic_analytics_copilot.loans.models import LoanOriginationRow
 from agentic_analytics_copilot.loans.parser import parse_origination_file, parse_performance_file
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
 
-@pytest.fixture
-def engine():  # type: ignore[no-untyped-def]
-    try:
-        engine = get_engine()
-        with engine.connect():
-            pass
-    except Exception:
-        pytest.skip("Postgres not reachable")
-    create_tables(engine)
-    yield engine
-    with engine.begin() as conn:
-        conn.execute(
-            delete(LoanPerformanceRow).where(LoanPerformanceRow.loan_sequence_number.like("TEST%"))
-        )
-        conn.execute(
-            delete(LoanOriginationRow).where(LoanOriginationRow.loan_sequence_number.like("TEST%"))
-        )
-
-
-def test_load_originations_dedups_on_rerun(engine) -> None:  # type: ignore[no-untyped-def]
+def test_load_originations_dedups_on_rerun(engine: Engine) -> None:
     records = parse_origination_file(FIXTURES / "sample_orig.txt").records
 
     first_count = load_originations(engine, records)
@@ -50,7 +28,7 @@ def test_load_originations_dedups_on_rerun(engine) -> None:  # type: ignore[no-u
     assert len(rows) == len(records)
 
 
-def test_load_performance_dedups_on_rerun(engine) -> None:  # type: ignore[no-untyped-def]
+def test_load_performance_dedups_on_rerun(engine: Engine) -> None:
     load_originations(engine, parse_origination_file(FIXTURES / "sample_orig.txt").records)
     records = parse_performance_file(FIXTURES / "sample_perf.txt").records
 

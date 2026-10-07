@@ -13,6 +13,7 @@ brew install postgresql@16
 brew services start postgresql@16
 psql postgres -c "CREATE ROLE copilot LOGIN PASSWORD 'copilot';"
 createdb -O copilot copilot
+createdb -O copilot copilot_test
 ```
 
 Homebrew's `pgvector` formula only ships prebuilt binaries for Postgres 17/18, not 16, so build it from source against `postgresql@16`:
@@ -24,6 +25,7 @@ make PG_CONFIG=/opt/homebrew/opt/postgresql@16/bin/pg_config
 make install PG_CONFIG=/opt/homebrew/opt/postgresql@16/bin/pg_config
 cd .. && rm -rf pgvector-0.8.6
 psql -d copilot -c "CREATE EXTENSION vector;"
+psql -d copilot_test -c "CREATE EXTENSION vector;"
 ```
 
 Then:
@@ -44,6 +46,9 @@ uv run fastapi dev src/agentic_analytics_copilot/main.py
 ```
 
 ## Test
+
+Tests run against `copilot_test` (`TEST_DATABASE_URL`), never the real data, and refuse to
+start if that URL does not end in `_test`. Postgres must be running; DB tests fail rather than skip.
 
 ```bash
 uv run pytest
